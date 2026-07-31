@@ -1,0 +1,75 @@
+# ── DEFINICION DEL PIPELINE DLT ─────────────────────────────────────────────
+# Este archivo define el pipeline Delta Live Tables del proyecto.
+# Es referenciado desde databricks.yml via: include: resources/*.yml
+#
+# NOTA sobre paths: los paths de libraries usan ../ porque este archivo
+# vive en resources/ y los paths se resuelven relativos a esta carpeta.
+# ../ sube un nivel a la raiz del proyecto donde vive src/.
+resources:
+  pipelines:
+    liga1_dlt_pipeline:
+
+      # Nombre visible en la UI de Databricks.
+      # ${bundle.target} se resuelve en deploy: "dev" o "prod"
+      name: "Liga1 DLT POC - ${bundle.target}"
+
+      # Catalogo Unity Catalog donde se crean las tablas Delta.
+      # ${var.catalog} viene de databricks.yml segun el target:
+      #   dev  → dev_liga1_poc
+      #   prod → prod_liga1_poc
+      catalog: ${var.catalog}
+
+      # Schema por defecto del pipeline. DLT lo requiere cuando se usa
+      # Unity Catalog con Default Storage o Direct Publishing Mode.
+      # Cada @dlt.table sobreescribe con su propio schema= via spark.conf.
+      # Este valor es solo el fallback obligatorio que exige Unity Catalog.
+      target: ${var.schema_bronze}
+
+      # Spark configurations inyectadas al cluster en runtime.
+      # El codigo Python las lee con: spark.conf.get("nombre_variable")
+      configuration:
+        adls_landing_path: ${var.adls_landing_path}
+        catalog: ${var.catalog}
+        schema_bronze: ${var.schema_bronze}
+        schema_silver: ${var.schema_silver}
+        schema_gold: ${var.schema_gold}
+
+      # Archivos con las definiciones @dlt.table y utilidades compartidas.
+      #
+      # ORDEN IMPORTA — utils_poc va PRIMERO como 'file:'.
+      # DLT ejecuta todos los archivos en el mismo proceso Python.
+      # Al ejecutar utils_poc.py primero, sus funciones (get_yaml_config,
+      # sanitize_column_names, rename_columns, log) quedan en el namespace
+      # global del pipeline — los notebooks las llaman directamente SIN import.
+      # No se necesita wheel, bootstrap ni sys.path.
+      #
+      # Los paths relativos los resuelve el Bundle al workspace path
+      # en deploy time: ../src/X → /Workspace/Repos/.../src/X
+      libraries:
+        - file:
+            path: ../src/utils/utils_poc.py
+        - notebook:
+            path: ../src/bronze/bronze_partidos.py
+        - notebook:
+            path: ../src/silver/silver_partidos.py
+        - notebook:
+            path: ../src/gold/gold_partidos.py
+
+      # Cluster que DLT levanta al correr el pipeline y destruye al terminar.
+      clusters:
+        - label: default
+          num_workers: 0          # cero workers = nodo unico
+          node_type_id: Standard_D4s_v3
+          spark_conf:
+            spark.master: "local[*, 4]"
+            spark.databricks.cluster.profile: singleNode
+            spark.driver.memory: "7g"
+            spark.executor.memory: "6g"
+            spark.driver.maxResultSize: "2g"
+            spark.sql.shuffle.partitions: "8"
+            spark.sql.files.maxPartitionBytes: "64m"
+            spark.sql.adaptive.enabled: "true"
+            spark.sql.execution.arrow.pyspark.enabled: "true"
+            spark.databricks.io.cache.enabled: "true"
+          custom_tags:
+            ResourceClass: SingleNode
