@@ -25,53 +25,60 @@ jobs:
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
         run: |
           python3 - << 'PYEOF'
-          import requests, os, time, sys
+          import requests, os, sys
 
           host    = os.environ["DATABRICKS_HOST"].rstrip("/")
           token   = os.environ["DATABRICKS_TOKEN"]
           headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
-          # Usar el Serverless Starter Warehouse (viene por defecto en todo workspace)
-          r = requests.get(f"{host}/api/2.0/sql/warehouses", headers=headers)
-          warehouses = r.json().get("warehouses", [])
-          if not warehouses:
-              print("❌ No hay SQL Warehouse disponible en el workspace prod")
+          print(f"Workspace: {host}")
+
+          # ── Verificar conectividad ────────────────────────────────────────────
+          r = requests.get(f"{host}/api/2.0/preview/scim/v2/Me", headers=headers)
+          if r.status_code != 200:
+              print(f"❌ No se puede conectar al workspace: {r.status_code} {r.text}")
               sys.exit(1)
-          wh_id = warehouses[0]["id"]
-          print(f"✅ Usando warehouse: {warehouses[0]['name']} (id={wh_id})")
+          me = r.json()
+          print(f"✅ Conectado como: {me.get('userName', me.get('displayName', '?'))}")
 
-          stmts = [
-              "CREATE CATALOG IF NOT EXISTS prod_liga1_poc MANAGED LOCATION 'abfss://liga1prod@datalakelig1prod.dfs.core.windows.net/dlt-poc/prod'",
-              "CREATE SCHEMA IF NOT EXISTS prod_liga1_poc.bronze",
-              "CREATE SCHEMA IF NOT EXISTS prod_liga1_poc.silver",
-              "CREATE SCHEMA IF NOT EXISTS prod_liga1_poc.gold",
-          ]
+          # ── Crear catalog via Unity Catalog REST API (no necesita warehouse) ──
+          # 409 = ya existe → idempotente, no es error
+          r = requests.post(
+              f"{host}/api/2.1/unity-catalog/catalogs",
+              headers=headers,
+              json={
+                  "name": "prod_liga1_poc",
+                  "storage_root": "abfss://liga1prod@datalakelig1prod.dfs.core.windows.net/dlt-poc/prod",
+                  "comment": "Catalog produccion Liga1 DLT POC"
+              }
+          )
+          if r.status_code in (200, 201):
+              print("✅ Catalog prod_liga1_poc creado")
+          elif r.status_code == 409:
+              print("✅ Catalog prod_liga1_poc ya existe")
+          else:
+              print(f"❌ Error creando catalog: {r.status_code}")
+              print(r.text)
+              sys.exit(1)
 
-          def run_stmt(stmt):
+          # ── Crear schemas bronze / silver / gold ──────────────────────────────
+          for schema in ["bronze", "silver", "gold"]:
               r = requests.post(
-                  f"{host}/api/2.0/sql/statements", headers=headers,
-                  json={"statement": stmt, "warehouse_id": wh_id, "wait_timeout": "30s"}
+                  f"{host}/api/2.1/unity-catalog/schemas",
+                  headers=headers,
+                  json={
+                      "name": schema,
+                      "catalog_name": "prod_liga1_poc",
+                      "comment": f"Capa {schema} Liga1 DLT POC"
+                  }
               )
-              resp  = r.json()
-              state = resp.get("status", {}).get("state", "?")
-              if state == "PENDING":
-                  stmt_id = resp.get("statement_id")
-                  for _ in range(12):
-                      time.sleep(5)
-                      r2    = requests.get(f"{host}/api/2.0/sql/statements/{stmt_id}", headers=headers)
-                      state = r2.json().get("status", {}).get("state", "?")
-                      if state != "PENDING":
-                          break
-              err = resp.get("status", {}).get("error", {}).get("message", "")
-              return state, err
-
-          for stmt in stmts:
-              state, err = run_stmt(stmt)
-              if state == "SUCCEEDED":
-                  print(f"  ✅ {stmt[:90]}")
+              if r.status_code in (200, 201):
+                  print(f"✅ Schema prod_liga1_poc.{schema} creado")
+              elif r.status_code == 409:
+                  print(f"✅ Schema prod_liga1_poc.{schema} ya existe")
               else:
-                  print(f"  ❌ [{state}] {stmt[:90]}")
-                  if err: print(f"     {err}")
+                  print(f"❌ Error creando schema {schema}: {r.status_code}")
+                  print(r.text)
                   sys.exit(1)
 
           print("\n✅ Catalog prod_liga1_poc y schemas bronze/silver/gold listos")
@@ -100,3 +107,9 @@ jobs:
           DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST_PROD }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
         run: databricks bundle deploy --target prod
+
+      - name: Ejecutar pipeline DLT prod
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST_PROD }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
+        run: databricks bundle run liga1_dlt_pipeline --target prod
