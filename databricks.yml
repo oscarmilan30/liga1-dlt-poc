@@ -1,0 +1,58 @@
+# ── 1. NOMBRE DEL PROYECTO ──────────────────────────────────────────────────
+# Identificador unico del proyecto en Databricks.
+# Cuando despliegas, Databricks crea recursos con este prefijo
+# para evitar colisiones con otros proyectos en el mismo workspace.
+bundle:
+  name: liga1_dlt_poc
+
+# ── 2. ARCHIVOS DE RECURSOS EXTERNOS ────────────────────────────────────────
+# Le dice al Bundle que busque definiciones de recursos en la carpeta resources/.
+# Cada archivo .yml ahi puede definir pipelines, jobs, etc.
+# Patron empresarial: un archivo por recurso, databricks.yml solo orquesta.
+include:
+  - resources/*.yml
+
+# ── 3. DECLARACION DE VARIABLES ─────────────────────────────────────────────
+# Declaras las variables que existiran en el Bundle.
+# Sin esta seccion no puedes usar ${var.nombre} en ningun archivo del Bundle.
+# El 'default' es el valor si nadie lo sobreescribe.
+variables:
+  adls_landing_path:
+    description: "Ruta ADLS donde viven los JSON fuente"
+    default: "abfss://liga1dltpoc@datalakelig1peru.dfs.core.windows.net/dlt-poc/landing/estadisticas_partidos"
+
+  catalog:
+    description: "Catalogo Unity Catalog destino"
+    default: dev_liga1_poc
+
+  schema_bronze:
+    description: "Schema de la capa Bronze"
+    default: bronze
+
+  schema_silver:
+    description: "Schema de la capa Silver"
+    default: silver
+
+  schema_gold:
+    description: "Schema de la capa Gold"
+    default: gold
+
+# ── 4. AMBIENTES (TARGETS) ──────────────────────────────────────────────────
+# Cada target sobreescribe las variables para ese ambiente.
+# Cuando GitHub Actions corre --target prod, usa prod_liga1_poc automaticamente.
+# No cambias nada en el codigo Python ni en resources/.
+targets:
+  dev:
+    default: true       # si corres sin --target, usa este ambiente
+    mode: development   # DLT en modo dev: mas barato, sin retention de datos
+    variables:
+      adls_landing_path: "abfss://liga1dltpoc@datalakelig1peru.dfs.core.windows.net/dlt-poc/landing/estadisticas_partidos"
+      catalog: dev_liga1_poc
+
+  prod:
+    mode: production    # DLT en modo prod: retention activada, optimizaciones
+    # workspace.host NO se declara aquí — DAB lo toma de la env var DATABRICKS_HOST
+    # que GitHub Actions inyecta via secret DATABRICKS_HOST_PROD
+    variables:
+      adls_landing_path: "abfss://liga1prod@datalakelig1prod.dfs.core.windows.net/dlt-poc/landing/estadisticas_partidos"
+      catalog: prod_liga1_poc

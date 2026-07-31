@@ -1,0 +1,505 @@
+estadisticas_partidos:
+
+  # ──────────────────────────────────────────────
+  # Campo raíz del JSON donde vive el array de datos
+  # ──────────────────────────────────────────────
+  campo_json: data
+
+  # ──────────────────────────────────────────────
+  # Columnas base
+  # ──────────────────────────────────────────────
+  cols_base:
+    - fecha
+    - local
+    - visitante
+    - marcador
+    - url
+
+  # ──────────────────────────────────────────────
+  # Columnas de stats en ESPAÑOL (nombres originales del JSON)
+  # ──────────────────────────────────────────────
+  cols_stats_es:
+    - "Tiros totales_local"
+    - "Tiros totales_visitante"
+    - "Disparos a puerta_local"
+    - "Disparos a puerta_visitante"
+    - "Disparos fuera_local"
+    - "Disparos fuera_visitante"
+    - "Tiros bloqueados_local"
+    - "Tiros bloqueados_visitante"
+    - "Tiros a los postes_local"
+    - "Tiros a los postes_visitante"
+    - "Tiros en el área_local"
+    - "Tiros en el área_visitante"
+    - "Tiros fuera del área_local"
+    - "Tiros fuera del área_visitante"
+    - "Gran probabilidad_local"
+    - "Gran probabilidad_visitante"
+    - "Grandes oportunidades perdidas_local"
+    - "Grandes oportunidades perdidas_visitante"
+    - "Pases precisos_local"
+    - "Pases precisos_visitante"
+    - "Pases_local"
+    - "Pases_visitante"
+    - "Tiros largos precisos_local"
+    - "Tiros largos precisos_visitante"
+    - "Centros precisos_local"
+    - "Centros precisos_visitante"
+    - "Mitad propia_local"
+    - "Mitad propia_visitante"
+    - "Mitad rival_local"
+    - "Mitad rival_visitante"
+    - "Toques en el área rival_local"
+    - "Toques en el área rival_visitante"
+    - "Saques de esquina_local"
+    - "Saques de esquina_visitante"
+    - "Lanzamientos_local"
+    - "Lanzamientos_visitante"
+    - "Fueras de juego_local"
+    - "Fueras de juego_visitante"
+    - "Faltas_local"
+    - "Faltas_visitante"
+    - "Tarjetas amarillas_local"
+    - "Tarjetas amarillas_visitante"
+    - "Tarjetas rojas_local"
+    - "Tarjetas rojas_visitante"
+    - "Entradas_local"
+    - "Entradas_visitante"
+    - "Intercepciones_local"
+    - "Intercepciones_visitante"
+    - "Bloqueos_local"
+    - "Bloqueos_visitante"
+    - "Despejes_local"
+    - "Despejes_visitante"
+    - "Paradas del portero_local"
+    - "Paradas del portero_visitante"
+    - "Duelos ganados_local"
+    - "Duelos ganados_visitante"
+    - "Duelo terrestre_local"
+    - "Duelo terrestre_visitante"
+    - "Aéreo ganado_local"
+    - "Aéreo ganado_visitante"
+    - "Regates realizados_local"
+    - "Regates realizados_visitante"
+    - "Posesión_local"
+    - "Posesión_visitante"
+
+  # ──────────────────────────────────────────────
+  # Columnas de stats en INGLÉS (nombres originales del JSON)
+  # ──────────────────────────────────────────────
+  cols_stats_en:
+    - "Total shots_local"
+    - "Total shots_visitante"
+    - "Shots on target_local"
+    - "Shots on target_visitante"
+    - "Shots off target_local"
+    - "Shots off target_visitante"
+    - "Blocked shots_local"
+    - "Blocked shots_visitante"
+    - "Hit woodwork_local"
+    - "Hit woodwork_visitante"
+    - "Shots inside box_local"
+    - "Shots inside box_visitante"
+    - "Shots outside box_local"
+    - "Shots outside box_visitante"
+    - "Big chances_local"
+    - "Big chances_visitante"
+    - "Big chances missed_local"
+    - "Big chances missed_visitante"
+    - "Accurate passes_local"
+    - "Accurate passes_visitante"
+    - "Passes_local"
+    - "Passes_visitante"
+    - "Accurate long balls_local"
+    - "Accurate long balls_visitante"
+    - "Accurate crosses_local"
+    - "Accurate crosses_visitante"
+    - "Own half_local"
+    - "Own half_visitante"
+    - "Opposition half_local"
+    - "Opposition half_visitante"
+    - "Touches in opposition box_local"
+    - "Touches in opposition box_visitante"
+    - "Corners_local"
+    - "Corners_visitante"
+    - "Throws_local"
+    - "Throws_visitante"
+    - "Offsides_local"
+    - "Offsides_visitante"
+    - "Fouls committed_local"
+    - "Fouls committed_visitante"
+    - "Yellow cards_local"
+    - "Yellow cards_visitante"
+    - "Red cards_local"
+    - "Red cards_visitante"
+    - "Tackles_local"
+    - "Tackles_visitante"
+    - "Interceptions_local"
+    - "Interceptions_visitante"
+    - "Blocks_local"
+    - "Blocks_visitante"
+    - "Clearances_local"
+    - "Clearances_visitante"
+    - "Keeper saves_local"
+    - "Keeper saves_visitante"
+    - "Duels won_local"
+    - "Duels won_visitante"
+    - "Ground duels won_local"
+    - "Ground duels won_visitante"
+    - "Aerial duels won_local"
+    - "Aerial duels won_visitante"
+    - "Successful dribbles_local"
+    - "Successful dribbles_visitante"
+
+  # ──────────────────────────────────────────────
+  # Mapeo ES → EN para coalesce en Silver
+  #
+  # Claves = nombres ORIGINALES del JSON (con espacios, tal como los guarda Bronze).
+  # Silver lee bronze_partidos via backtick: F.col("`Tiros totales_local`")
+  # y hace: coalesce(col_ES, col_EN) → snake_case
+  # ──────────────────────────────────────────────
+  en_fallback:
+    "Tiros totales_local":                       "Total shots_local"
+    "Tiros totales_visitante":                   "Total shots_visitante"
+    "Disparos a puerta_local":                   "Shots on target_local"
+    "Disparos a puerta_visitante":               "Shots on target_visitante"
+    "Disparos fuera_local":                      "Shots off target_local"
+    "Disparos fuera_visitante":                  "Shots off target_visitante"
+    "Tiros bloqueados_local":                    "Blocked shots_local"
+    "Tiros bloqueados_visitante":                "Blocked shots_visitante"
+    "Tiros a los postes_local":                  "Hit woodwork_local"
+    "Tiros a los postes_visitante":              "Hit woodwork_visitante"
+    "Tiros en el área_local":                    "Shots inside box_local"
+    "Tiros en el área_visitante":                "Shots inside box_visitante"
+    "Tiros fuera del área_local":                "Shots outside box_local"
+    "Tiros fuera del área_visitante":            "Shots outside box_visitante"
+    "Gran probabilidad_local":                   "Big chances_local"
+    "Gran probabilidad_visitante":               "Big chances_visitante"
+    "Grandes oportunidades perdidas_local":      "Big chances missed_local"
+    "Grandes oportunidades perdidas_visitante":  "Big chances missed_visitante"
+    "Pases precisos_local":                      "Accurate passes_local"
+    "Pases precisos_visitante":                  "Accurate passes_visitante"
+    "Pases_local":                               "Passes_local"
+    "Pases_visitante":                           "Passes_visitante"
+    "Tiros largos precisos_local":               "Accurate long balls_local"
+    "Tiros largos precisos_visitante":           "Accurate long balls_visitante"
+    "Centros precisos_local":                    "Accurate crosses_local"
+    "Centros precisos_visitante":                "Accurate crosses_visitante"
+    "Mitad propia_local":                        "Own half_local"
+    "Mitad propia_visitante":                    "Own half_visitante"
+    "Mitad rival_local":                         "Opposition half_local"
+    "Mitad rival_visitante":                     "Opposition half_visitante"
+    "Toques en el área rival_local":             "Touches in opposition box_local"
+    "Toques en el área rival_visitante":         "Touches in opposition box_visitante"
+    "Saques de esquina_local":                   "Corners_local"
+    "Saques de esquina_visitante":               "Corners_visitante"
+    "Lanzamientos_local":                        "Throws_local"
+    "Lanzamientos_visitante":                    "Throws_visitante"
+    "Fueras de juego_local":                     "Offsides_local"
+    "Fueras de juego_visitante":                 "Offsides_visitante"
+    "Faltas_local":                              "Fouls committed_local"
+    "Faltas_visitante":                          "Fouls committed_visitante"
+    "Tarjetas amarillas_local":                  "Yellow cards_local"
+    "Tarjetas amarillas_visitante":              "Yellow cards_visitante"
+    "Tarjetas rojas_local":                      "Red cards_local"
+    "Tarjetas rojas_visitante":                  "Red cards_visitante"
+    "Entradas_local":                            "Tackles_local"
+    "Entradas_visitante":                        "Tackles_visitante"
+    "Intercepciones_local":                      "Interceptions_local"
+    "Intercepciones_visitante":                  "Interceptions_visitante"
+    "Bloqueos_local":                            "Blocks_local"
+    "Bloqueos_visitante":                        "Blocks_visitante"
+    "Despejes_local":                            "Clearances_local"
+    "Despejes_visitante":                        "Clearances_visitante"
+    "Paradas del portero_local":                 "Keeper saves_local"
+    "Paradas del portero_visitante":             "Keeper saves_visitante"
+    "Duelos ganados_local":                      "Duels won_local"
+    "Duelos ganados_visitante":                  "Duels won_visitante"
+    "Duelo terrestre_local":                     "Ground duels won_local"
+    "Duelo terrestre_visitante":                 "Ground duels won_visitante"
+    "Aéreo ganado_local":                        "Aerial duels won_local"
+    "Aéreo ganado_visitante":                    "Aerial duels won_visitante"
+    "Regates realizados_local":                  "Successful dribbles_local"
+    "Regates realizados_visitante":              "Successful dribbles_visitante"
+    "Posesión_local":                            "Posesión_local"
+    "Posesión_visitante":                        "Posesión_visitante"
+
+  # ──────────────────────────────────────────────
+  # Renombre final a snake_case (nombre destino Silver)
+  #
+  # Claves = nombres ORIGINALES del JSON (con espacios, tal como los guarda Bronze).
+  # Silver aplica sanitize_column_names() primero → luego usa rename_columns()
+  # con este mapeo para llegar al nombre snake_case final.
+  # ──────────────────────────────────────────────
+  rename_columns:
+    fecha:                                       fecha_raw
+    local:                                       equipo_local
+    visitante:                                   equipo_visitante
+    marcador:                                    marcador
+    url:                                         url
+    "Tiros totales_local":                       tiros_totales_local
+    "Tiros totales_visitante":                   tiros_totales_visitante
+    "Disparos a puerta_local":                   disparos_puerta_local
+    "Disparos a puerta_visitante":               disparos_puerta_visitante
+    "Disparos fuera_local":                      disparos_fuera_local
+    "Disparos fuera_visitante":                  disparos_fuera_visitante
+    "Tiros bloqueados_local":                    tiros_bloqueados_local
+    "Tiros bloqueados_visitante":                tiros_bloqueados_visitante
+    "Tiros a los postes_local":                  tiros_postes_local
+    "Tiros a los postes_visitante":              tiros_postes_visitante
+    "Tiros en el área_local":                    tiros_area_local
+    "Tiros en el área_visitante":                tiros_area_visitante
+    "Tiros fuera del área_local":                tiros_fuera_area_local
+    "Tiros fuera del área_visitante":            tiros_fuera_area_visitante
+    "Gran probabilidad_local":                   gran_probabilidad_local
+    "Gran probabilidad_visitante":               gran_probabilidad_visitante
+    "Grandes oportunidades perdidas_local":      grandes_oportunidades_perdidas_local
+    "Grandes oportunidades perdidas_visitante":  grandes_oportunidades_perdidas_visitante
+    "Pases precisos_local":                      pases_precisos_local
+    "Pases precisos_visitante":                  pases_precisos_visitante
+    "Pases_local":                               pases_local
+    "Pases_visitante":                           pases_visitante
+    "Tiros largos precisos_local":               tiros_largos_precisos_local
+    "Tiros largos precisos_visitante":           tiros_largos_precisos_visitante
+    "Centros precisos_local":                    centros_precisos_local
+    "Centros precisos_visitante":                centros_precisos_visitante
+    "Mitad propia_local":                        mitad_propia_local
+    "Mitad propia_visitante":                    mitad_propia_visitante
+    "Mitad rival_local":                         mitad_rival_local
+    "Mitad rival_visitante":                     mitad_rival_visitante
+    "Toques en el área rival_local":             toques_area_rival_local
+    "Toques en el área rival_visitante":         toques_area_rival_visitante
+    "Saques de esquina_local":                   saques_esquina_local
+    "Saques de esquina_visitante":               saques_esquina_visitante
+    "Lanzamientos_local":                        lanzamientos_local
+    "Lanzamientos_visitante":                    lanzamientos_visitante
+    "Fueras de juego_local":                     fueras_juego_local
+    "Fueras de juego_visitante":                 fueras_juego_visitante
+    "Faltas_local":                              faltas_local
+    "Faltas_visitante":                          faltas_visitante
+    "Tarjetas amarillas_local":                  tarjetas_amarillas_local
+    "Tarjetas amarillas_visitante":              tarjetas_amarillas_visitante
+    "Tarjetas rojas_local":                      tarjetas_rojas_local
+    "Tarjetas rojas_visitante":                  tarjetas_rojas_visitante
+    "Entradas_local":                            entradas_local
+    "Entradas_visitante":                        entradas_visitante
+    "Intercepciones_local":                      intercepciones_local
+    "Intercepciones_visitante":                  intercepciones_visitante
+    "Bloqueos_local":                            bloqueos_local
+    "Bloqueos_visitante":                        bloqueos_visitante
+    "Despejes_local":                            despejes_local
+    "Despejes_visitante":                        despejes_visitante
+    "Paradas del portero_local":                 paradas_portero_local
+    "Paradas del portero_visitante":             paradas_portero_visitante
+    "Duelos ganados_local":                      duelos_ganados_local
+    "Duelos ganados_visitante":                  duelos_ganados_visitante
+    "Duelo terrestre_local":                     duelo_terrestre_local
+    "Duelo terrestre_visitante":                 duelo_terrestre_visitante
+    "Aéreo ganado_local":                        aereo_ganado_local
+    "Aéreo ganado_visitante":                    aereo_ganado_visitante
+    "Regates realizados_local":                  regates_realizados_local
+    "Regates realizados_visitante":              regates_realizados_visitante
+    "Posesión_local":                            posesion_local
+    "Posesión_visitante":                        posesion_visitante
+
+  # ──────────────────────────────────────────────
+  # Schema final Silver
+  # ──────────────────────────────────────────────
+  schema:
+    equipo_local:                                string
+    equipo_visitante:                            string
+    marcador:                                    string
+    goles_local:                                 int
+    goles_visitante:                             int
+    resultado:                                   string
+    fecha:                                       date
+    temporada:                                   int
+    url:                                         string
+    tiros_totales_local:                         int
+    tiros_totales_visitante:                     int
+    disparos_puerta_local:                       int
+    disparos_puerta_visitante:                   int
+    disparos_fuera_local:                        int
+    disparos_fuera_visitante:                    int
+    tiros_bloqueados_local:                      int
+    tiros_bloqueados_visitante:                  int
+    tiros_postes_local:                          int
+    tiros_postes_visitante:                      int
+    tiros_area_local:                            int
+    tiros_area_visitante:                        int
+    tiros_fuera_area_local:                      int
+    tiros_fuera_area_visitante:                  int
+    gran_probabilidad_local:                     int
+    gran_probabilidad_visitante:                 int
+    grandes_oportunidades_perdidas_local:        int
+    grandes_oportunidades_perdidas_visitante:    int
+    pases_precisos_local:                        int
+    pases_precisos_local_pct:                    double
+    pases_precisos_visitante:                    int
+    pases_precisos_visitante_pct:                double
+    pases_local:                                 int
+    pases_visitante:                             int
+    tiros_largos_precisos_local:                 int
+    tiros_largos_precisos_local_pct:             double
+    tiros_largos_precisos_visitante:             int
+    tiros_largos_precisos_visitante_pct:         double
+    centros_precisos_local:                      int
+    centros_precisos_local_pct:                  double
+    centros_precisos_visitante:                  int
+    centros_precisos_visitante_pct:              double
+    mitad_propia_local:                          int
+    mitad_propia_visitante:                      int
+    mitad_rival_local:                           int
+    mitad_rival_visitante:                       int
+    toques_area_rival_local:                     int
+    toques_area_rival_visitante:                 int
+    saques_esquina_local:                        int
+    saques_esquina_visitante:                    int
+    lanzamientos_local:                          int
+    lanzamientos_visitante:                      int
+    fueras_juego_local:                          int
+    fueras_juego_visitante:                      int
+    faltas_local:                                int
+    faltas_visitante:                            int
+    tarjetas_amarillas_local:                    int
+    tarjetas_amarillas_visitante:                int
+    tarjetas_rojas_local:                        int
+    tarjetas_rojas_visitante:                    int
+    entradas_local:                              int
+    entradas_visitante:                          int
+    intercepciones_local:                        int
+    intercepciones_visitante:                    int
+    bloqueos_local:                              int
+    bloqueos_visitante:                          int
+    despejes_local:                              int
+    despejes_visitante:                          int
+    paradas_portero_local:                       int
+    paradas_portero_visitante:                   int
+    duelos_ganados_local:                        int
+    duelos_ganados_visitante:                    int
+    duelo_terrestre_local:                       int
+    duelo_terrestre_local_pct:                   double
+    duelo_terrestre_visitante:                   int
+    duelo_terrestre_visitante_pct:               double
+    aereo_ganado_local:                          int
+    aereo_ganado_local_pct:                      double
+    aereo_ganado_visitante:                      int
+    aereo_ganado_visitante_pct:                  double
+    regates_realizados_local:                    int
+    regates_realizados_local_pct:                double
+    regates_realizados_visitante:                int
+    regates_realizados_visitante_pct:            double
+    posesion_local:                              int
+    posesion_visitante:                          int
+    fuente:                                      string
+    fecha_carga:                                 timestamp
+
+  # ──────────────────────────────────────────────
+  # Columnas con formato "valor (pct%)"
+  # Silver las divide en: columna=valor, columna_pct=porcentaje
+  # ──────────────────────────────────────────────
+  stats_with_pct:
+    - pases_precisos_local
+    - pases_precisos_visitante
+    - tiros_largos_precisos_local
+    - tiros_largos_precisos_visitante
+    - centros_precisos_local
+    - centros_precisos_visitante
+    - duelo_terrestre_local
+    - duelo_terrestre_visitante
+    - aereo_ganado_local
+    - aereo_ganado_visitante
+    - regates_realizados_local
+    - regates_realizados_visitante
+
+  # Columnas con solo "%" sin valor base
+  stats_solo_pct:
+    - posesion_local
+    - posesion_visitante
+
+  # ──────────────────────────────────────────────
+  # Parseo del marcador
+  # ──────────────────────────────────────────────
+  goles_from_marcador:
+    source:          marcador
+    goles_local:     goles_local
+    goles_visitante: goles_visitante
+
+  # ──────────────────────────────────────────────
+  # Formatos de fecha detectados en los datos
+  # ──────────────────────────────────────────────
+  fecha_formats:
+    formato_numerico:  "dd-MM-yyyy"
+    formato_texto_en:  "MMMM d, yyyy"
+    # EEEE (día de la semana) no es soportado en Spark 3.0+ DateTimeFormatter.
+    # _parse_fecha() stripea el día con regex antes de llamar to_date():
+    #   "Sunday, July 25, 2021" → "July 25, 2021" → to_date("MMMM d, yyyy")
+    #   "Saturday, February 14" → "February 14"   → concat año → to_date("MMMM d, yyyy")
+
+  # ──────────────────────────────────────────────
+  # Gold — columnas de stats para gold_rendimiento_equipo
+  #
+  # Solo el nombre base (sin _local / _visitante).
+  # _unpivot_equipo() añade el sufijo según el rol del equipo.
+  # Disponibles desde 2022 — antes los datos fuente no las incluyen.
+  # ──────────────────────────────────────────────
+  gold_stats_cols:
+    - tiros_totales
+    - disparos_puerta
+    - posesion
+    - faltas
+    - tarjetas_amarillas
+    - tarjetas_rojas
+    - saques_esquina
+
+  # Año de inicio para gold_rendimiento_equipo
+  gold_rendimiento_anio_inicio: 2022
+
+  # ──────────────────────────────────────────────
+  # Expectations DLT (data quality Silver)
+  # ──────────────────────────────────────────────
+  expectations:
+    - name: "equipo_local no nulo"
+      constraint: "equipo_local IS NOT NULL"
+    - name: "equipo_visitante no nulo"
+      constraint: "equipo_visitante IS NOT NULL"
+    - name: "marcador valido"
+      constraint: "marcador IS NOT NULL AND marcador RLIKE '^[0-9]+ - [0-9]+$'"
+    - name: "goles no negativos"
+      constraint: "goles_local >= 0 AND goles_visitante >= 0"
+    - name: "temporada valida"
+      constraint: "temporada BETWEEN 2020 AND 2030"
+    - name: "posesion valida"
+      constraint: "posesion_local IS NULL OR (posesion_local BETWEEN 0 AND 100)"
+
+  # ──────────────────────────────────────────────
+  # Expectations DLT (data quality Gold — tabla_posiciones)
+  # ──────────────────────────────────────────────
+  gold_expectations_tabla_posiciones:
+    - name: "equipo no nulo"
+      constraint: "equipo IS NOT NULL"
+    - name: "temporada valida"
+      constraint: "temporada BETWEEN 2020 AND 2030"
+    - name: "puntos no negativos"
+      constraint: "puntos >= 0"
+    - name: "partidos jugados positivo"
+      constraint: "partidos_jugados > 0"
+    - name: "posicion positiva"
+      constraint: "posicion >= 1"
+    - name: "suma partidos cuadra"
+      constraint: "victorias + empates + derrotas = partidos_jugados"
+
+  # ──────────────────────────────────────────────
+  # Expectations DLT (data quality Gold — rendimiento_equipo)
+  # ──────────────────────────────────────────────
+  gold_expectations_rendimiento_equipo:
+    - name: "equipo no nulo"
+      constraint: "equipo IS NOT NULL"
+    - name: "rol valido"
+      constraint: "rol IN ('local', 'visitante')"
+    - name: "temporada desde 2022"
+      constraint: "temporada >= 2022"
+    - name: "partidos jugados positivo"
+      constraint: "partidos_jugados > 0"
+    - name: "posesion promedio valida"
+      constraint: "posesion_promedio IS NULL OR posesion_promedio BETWEEN 0 AND 100"
