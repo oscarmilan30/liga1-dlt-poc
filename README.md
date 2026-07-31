@@ -6,13 +6,19 @@ POC de ingeniería de datos sobre estadísticas históricas de la **Liga 1 Perua
 
 ---
 
+## Arquitectura
+
+![Arquitectura](img/Arquitectura.png)
+
+---
+
 ## ¿Qué demuestra este POC?
 
 | Concepto | Implementación |
 |---|---|
 | **Spark Declarative Pipelines (DLT)** | Pipeline declarativo con `@dlt.table` — Databricks gestiona orden, reintentos e incremental |
 | **Auto Loader** | Ingesta incremental desde ADLS con `cloudFiles` |
-| **Data Quality** | Expectations con `@dlt.expect` — validación declarativa en Silver |
+| **Data Quality** | Expectations con `@dlt.expect_all` — validación declarativa en Silver y Gold |
 | **Schema Evolution** | 7 archivos con esquemas de 5 a 69 columnas manejados automáticamente |
 | **Asset Bundles** | Pipeline como código — desplegado con `databricks bundle deploy` |
 | **CI/CD dev → prod** | Push a `develop` despliega en dev · Merge a `main` despliega en prod via GitHub Actions |
@@ -21,42 +27,45 @@ POC de ingeniería de datos sobre estadísticas históricas de la **Liga 1 Perua
 
 ---
 
-## Arquitectura
+## Pipeline DLT — Grafo de ejecución
 
-```
-ADLS Gen2
-liga1dltpoc/dlt-poc/landing/estadisticas_partidos/
-  7 archivos JSON (2020–2026, ~2,030 partidos)
-          │
-          │  Auto Loader (cloudFiles)
-          ▼
-    DLT Pipeline
-    ┌─────────────────────────────┐
-    │  BRONZE                     │
-    │  bronze_estadisticas_       │
-    │  partidos (raw)             │
-    │           │                 │
-    │           ▼ coalesce EN/ES  │
-    │  SILVER                     │
-    │  silver_partidos            │
-    │  (limpio + expectations)    │
-    │           │                 │
-    │           ▼ aggregaciones   │
-    │  GOLD                       │
-    │  gold_rendimiento_equipos   │
-    │  gold_top_atacantes         │
-    │  gold_dominio_historico     │
-    └─────────────────────────────┘
-          │
-          ▼
-    Unity Catalog
-    dev_liga1_poc / prod_liga1_poc
-    ├── bronze
-    ├── silver
-    └── gold
-```
+![DLT Pipeline Graph](img/DLT%20Pipeline%20Graph.png)
 
-![DLT Pipeline Graph](img/dlt_pipeline_graph.png)
+4 tablas · 0 errores · Expectations cumplidas en Silver y Gold
+
+---
+
+## Unity Catalog — prod_liga1_poc
+
+![Catalog prod](img/prod_liga1_poc.png)
+
+---
+
+## ¿Qué preguntas responde?
+
+Las tablas Gold son consumidas directamente desde **Databricks Genie** sin SQL:
+
+### gold_tabla_posiciones — Standings 2020–2026
+
+**¿Cuál fue la tabla de posiciones de la temporada 2024?**
+![Pregunta 1](img/pregunta%201.png)
+
+**¿Qué equipo acumuló más puntos sumando todas las temporadas 2020–2026?**
+![Pregunta 2](img/pregunta%202.png)
+
+**¿Cómo evolucionó el rendimiento de un equipo temporada a temporada?**
+![Pregunta 6](img/pregunta%206.png)
+
+### gold_rendimiento_equipo — Stats local/visitante 2022–2026
+
+**¿Cómo se compara el rendimiento local vs visitante de Alianza Lima en 2023?**
+![Pregunta 3](img/pregunta%203.png)
+
+**¿Cuál es la evolución de disparos a puerta por equipo?**
+![Pregunta 4](img/pregunta%204.png)
+
+**¿Qué equipos cometen más faltas jugando de visitante?**
+![Pregunta 5](img/pregunta%205.png)
 
 ---
 
@@ -64,25 +73,22 @@ liga1dltpoc/dlt-poc/landing/estadisticas_partidos/
 
 ```
 liga1-dlt-poc/
-├── databricks.yml                    ← Asset Bundle: targets dev + prod
+├── databricks.yml                    ← Asset Bundle: variables, targets dev + prod
 ├── resources/
-│   └── liga1_pipeline.yml            ← Definición del pipeline DLT
+│   └── liga1_pipeline.yml            ← Definición del pipeline DLT (cluster, config, libraries)
 ├── conf/
-│   └── estadisticas_partidos.yml     ← Schema, renombres, EN↔ES fallback
+│   └── estadisticas_partidos.yml     ← Schema, renombres, EN↔ES fallback, expectations, Gold config
 ├── src/
-│   ├── bronze/bronze_partidos.py     ← @dlt.table con Auto Loader
-│   ├── silver/silver_partidos.py     ← @dlt.table + @dlt.expect
-│   └── gold/gold_partidos.py         ← @dlt.table aggregaciones
+│   ├── utils/utils_poc.py            ← Funciones compartidas (get_yaml_config, sanitize, log)
+│   ├── bronze/bronze_partidos.py     ← @dlt.table · Auto Loader · explode JSON
+│   ├── silver/silver_partidos.py     ← @dlt.table · limpieza · @dlt.expect_all
+│   └── gold/gold_partidos.py         ← @dlt.table · standings · rendimiento local/visit
 ├── .github/workflows/
-│   ├── deploy-dev.yml                ← Push develop → bundle deploy dev
-│   └── deploy-prod.yml               ← Merge main → bundle deploy prod
+│   └── deploy-prod.yml               ← Merge main → catalog setup + bundle deploy + pipeline run
 ├── docs/
-│   ├── 01_funcional.md               ← Qué hace el proyecto y los datos
-│   └── 02_arquitectura.md            ← Infraestructura, permisos y setup
-├── img/
-│   └── dlt_pipeline_graph.png        ← Captura del grafo DLT
-└── datasets/sample/
-    └── estadisticas_partidos_2024.json
+│   ├── 01_funcional.md               ← Qué hace el proyecto, datos, arquitectura medallion
+│   └── 02_arquitectura.md            ← Infraestructura Azure, Unity Catalog, DAB, CI/CD
+└── img/                              ← Capturas del pipeline, catalog y Genie dashboard
 ```
 
 ---
@@ -93,26 +99,6 @@ liga1-dlt-poc/
 |---|---|
 | [Funcional](docs/01_funcional.md) | Qué hace el proyecto, datos, arquitectura medallion, parametrización |
 | [Arquitectura](docs/02_arquitectura.md) | Infraestructura Azure, permisos, Unity Catalog, CLI, Asset Bundles, CI/CD |
-
----
-
-## Setup rápido
-
-```cmd
-# 1. Instalar Databricks CLI
-winget install Databricks.DatabricksCLI
-
-# 2. Autenticar
-databricks configure
-
-# 3. Desplegar en dev
-databricks bundle deploy --target dev
-
-# 4. Correr el pipeline
-databricks bundle run liga1_dlt_pipeline --target dev
-```
-
-Ver [02_arquitectura.md](docs/02_arquitectura.md) para el setup completo.
 
 ---
 

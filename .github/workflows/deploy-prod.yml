@@ -3,6 +3,12 @@ name: Deploy to Production
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'conf/**'
+      - 'resources/**'
+      - 'databricks.yml'
+      - '.github/workflows/**'
 
 jobs:
   # ═══════════════════════════════════════════════════════════
