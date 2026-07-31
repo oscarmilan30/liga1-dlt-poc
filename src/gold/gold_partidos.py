@@ -30,15 +30,23 @@ from pyspark.sql import functions as F
 from pyspark.sql import Window
 
 # ── Bootstrap: añadir src/ al sys.path para importar utils_poc ───────────────
-_cwd = os.getcwd()
-if "/Repos/.internal/" in _cwd:
-    _p = _cwd.split("/Repos/.internal/")[1].split("/")
-    _repo_root = f"/Workspace/Repos/.internal/{_p[0]}/{_p[1]}"
-elif "/Repos/" in _cwd:
-    _p = _cwd.split("/Repos/")[1].split("/")
-    _repo_root = f"/Workspace/Repos/{_p[0]}/{_p[1]}"
-else:
-    _repo_root = _cwd
+# Estrategia en dos capas:
+#   1. DAB deploy (prod/dev via bundle): pipeline config inyecta repo_root
+#      → /Workspace/Users/{user}/.bundle/{bundle}/{target}/files
+#   2. Repos (dev manual, DLT source-linked): detección por os.getcwd()
+#      → /Workspace/Repos/.internal/{run_id}/{hash}/  o  /Workspace/Repos/{user}/{repo}/
+try:
+    _repo_root = spark.conf.get("repo_root")
+except Exception:
+    _cwd = os.getcwd()
+    if "/Repos/.internal/" in _cwd:
+        _p = _cwd.split("/Repos/.internal/")[1].split("/")
+        _repo_root = f"/Workspace/Repos/.internal/{_p[0]}/{_p[1]}"
+    elif "/Repos/" in _cwd:
+        _p = _cwd.split("/Repos/")[1].split("/")
+        _repo_root = f"/Workspace/Repos/{_p[0]}/{_p[1]}"
+    else:
+        _repo_root = _cwd
 if os.path.join(_repo_root, "src") not in sys.path:
     sys.path.insert(0, os.path.join(_repo_root, "src"))
 

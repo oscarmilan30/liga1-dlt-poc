@@ -33,6 +33,10 @@ resources:
         schema_bronze: ${var.schema_bronze}
         schema_silver: ${var.schema_silver}
         schema_gold: ${var.schema_gold}
+        # Ruta raíz del bundle en el workspace — resuelta por DAB en deploy time.
+        # Permite que el bootstrap de cada notebook localice src/utils/utils_poc.py
+        # sin adivinar paths. DAB sustituye las variables antes de crear el pipeline.
+        repo_root: "/Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}/files"
 
       # Archivos con las definiciones @dlt.table y utilidades compartidas.
       #
