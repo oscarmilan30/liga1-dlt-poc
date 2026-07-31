@@ -10,11 +10,16 @@ El objetivo principal es demostrar el uso de tecnologías modernas de Databricks
 
 ## ¿Qué preguntas responde?
 
-- ¿Qué equipo dominó históricamente la Liga 1 entre 2020 y 2026?
-- ¿Cómo evolucionó el rendimiento ofensivo y defensivo de cada equipo por temporada?
-- ¿Cuáles son los equipos con mayor efectividad de tiro?
-- ¿Qué equipos cometen más faltas y reciben más tarjetas históricamente?
-- ¿Cómo se compara el rendimiento local vs visitante por equipo?
+**Desde `gold_tabla_posiciones` (2020–2026):**
+- ¿Cuál fue la tabla de posiciones final de cada temporada?
+- ¿Qué equipo acumuló más puntos y mejor diferencia de goles históricamente?
+- ¿Cuántas victorias, empates y derrotas tuvo cada equipo por temporada?
+
+**Desde `gold_rendimiento_equipo` (2022–2026, local vs visitante):**
+- ¿Cómo se compara el rendimiento de un equipo jugando de local versus de visitante?
+- ¿Qué equipos tienen mayor posesión y efectividad de tiro (disparos a puerta)?
+- ¿Qué equipos cometen más faltas y acumulan más tarjetas por partido?
+- ¿Cómo evolucionó el perfil táctico de cada equipo temporada a temporada?
 
 ---
 
@@ -60,11 +65,12 @@ El objetivo principal es demostrar el uso de tecnologías modernas de Databricks
 
 ### Gold — Valor de Negocio
 
-| Tabla | Descripción |
-|---|---|
-| `gold_rendimiento_equipos` | PJ, PG, PE, PP, GF, GC, Pts por equipo y temporada |
-| `gold_top_atacantes` | Equipos con más goles y mayor efectividad de tiro por temporada |
-| `gold_dominio_historico` | Ranking histórico 2020–2026 acumulado |
+| Tabla | Años | Descripción |
+|---|---|---|
+| `gold_tabla_posiciones` | 2020–2026 | Standings por temporada: PJ, V, E, D, GF, GC, DG, Pts y posición. Calculado desde todos los partidos jugados. |
+| `gold_rendimiento_equipo` | 2022–2026 | Rendimiento promedio por equipo, temporada y rol (local/visitante): posesión, tiros, disparos a puerta, faltas, tarjetas, esquinas. Filtrado a 2022+ porque las estadísticas detalladas no están disponibles antes. |
+
+> **¿Por qué no hay dimensiones ni fact tables?** Silver ya es la tabla de hechos limpia. Gold es la capa de consumo — tablas pre-agregadas y denormalizadas. El analista no hace JOINs: todo viene calculado.
 
 ---
 
