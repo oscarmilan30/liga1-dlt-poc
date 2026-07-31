@@ -108,6 +108,27 @@ jobs:
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
         run: databricks bundle deploy --target prod
 
+      - name: Cancelar update activo si existe
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST_PROD }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
+        run: |
+          PIPELINE_ID=$(databricks bundle summary --target prod 2>/dev/null \
+            | python3 -c "
+          import sys, json
+          try:
+              d = json.load(sys.stdin)
+              pid = list(d.get('resources', {}).get('pipelines', {}).values())[0].get('id', '')
+              print(pid)
+          except Exception:
+              print('')
+          ")
+          if [ -n "$PIPELINE_ID" ]; then
+            echo "Pipeline ID: $PIPELINE_ID — cancelando update activo si existe..."
+            databricks pipelines stop "$PIPELINE_ID" 2>/dev/null || true
+            sleep 15
+          fi
+
       - name: Ejecutar pipeline DLT prod
         env:
           DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST_PROD }}
