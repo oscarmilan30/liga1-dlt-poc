@@ -27,10 +27,11 @@ from pyspark.sql import functions as F
 # -----------------------------------------------------------------------------
 # _detect_repo_root
 # Detecta la raíz del repo en Databricks.
-# Maneja tres contextos:
+# Maneja cuatro contextos:
 #   1. DLT source-linked → cwd: /Workspace/Repos/.internal/{run_id}/{hash}/...
 #   2. Notebooks en Repos → cwd: /Workspace/Repos/{user}/{repo}/...
-#   3. Fallback           → retorna cwd tal cual
+#   3. DAB bundle deploy  → cwd: /Workspace/Users/{user}/.bundle/{name}/{target}/files/src/...
+#   4. Fallback           → retorna cwd tal cual
 # -----------------------------------------------------------------------------
 def _detect_repo_root() -> str:
     try:
@@ -47,6 +48,10 @@ def _detect_repo_root() -> str:
             # Notebook interactivo en Repos
             parts = cwd.split("/Repos/")[1].split("/")
             return f"/Workspace/Repos/{parts[0]}/{parts[1]}"
+        elif "/.bundle/" in cwd and "/files/" in cwd:
+            # DAB bundle deploy: .bundle/{bundle}/{target}/files/{src_path}/notebook
+            # cwd = .../files/src/bronze → repo_root = .../files
+            return cwd.split("/files/")[0] + "/files"
         return cwd
     except Exception:
         return os.getcwd()
